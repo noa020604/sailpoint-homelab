@@ -12,7 +12,7 @@ BASE_URL = os.environ.get("BASE_URL", "http://localhost:8080")
 
 @app.route("/health")
 def health():
-    return jsonify({"status": "ok"})
+    return jsonify({"status": "everything is awesome"})
 
 
 @app.route("/shorten", methods=["POST"])
