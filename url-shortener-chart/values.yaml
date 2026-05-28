@@ -1,0 +1,13 @@
+replicaCount: 1
+
+image:
+  repository: url-shortener
+  tag: v1
+  pullPolicy: Never
+
+service:
+  type: LoadBalancer
+  port: 8080
+
+env:
+  baseUrl: "http://localhost:8080"
