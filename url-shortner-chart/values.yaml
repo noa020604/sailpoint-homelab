@@ -5,8 +5,8 @@ replicaCount: 1
 image:
   # Points to GHCR, matching the GitHub Repository name
   repository: ghcr.io/noa020604/sailpoint-homelab
-  # Default tag for local testing; The ci pipeline will override this dynamically with Git Commit SHAs
-  tag: 721164ed671057679f4eca8a36beb10b12fbf1ab
+  # The CI pipeline updates this tag with the latest Git Commit SHA
+  tag: latest
   # Always pull the image to ensure the latest version is deployed in development/testing
   pullPolicy: Always
 
