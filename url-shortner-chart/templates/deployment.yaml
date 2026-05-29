@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  # Using dynamic release name instead of hardcoded strings
+  name: "{{ .Release.Name }}-deployment"
+  labels:
+    app: {{ .Release.Name }}
+spec:
+  # Pulls the replica count from values.yaml (Locked to 1 for in-memory safety)
+  replicas: {{ .Values.replicaCount }}
+  #Keeps cluster clean by limiting rollback history to 3 versions
+  revisionHistoryLimit: 3
+  selector:
+    matchLabels:
+      # Tells the Deployment which Pods to monitor and manage based on their label
+      app: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        # Labels applied to the new Pods so the selector can find them
+        app: {{ .Release.Name }}
+    spec:
+      containers:
+      - name: "{{ .Release.Name }}-container"
+        # Combines repository and tag from values.yaml to pull the correct Docker image
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        ports:
+        # The internal port our Flask app is listening on inside the container
+        - containerPort: 8080
+        env:
+        # Injects the BASE_URL environment variable needed by our Python code
+        - name: BASE_URL
+          value: "{{ .Values.env.baseUrl }}"
+        # Liveness probe checks if the container crashed or froze
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        # Readiness probe checks if the app is fully ready to accept user traffic
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        # Injecting the CPU and memory limits we defined in values.yaml
+        resources:
+          limits:
+            cpu: {{ .Values.resources.limits.cpu }}
+            memory: {{ .Values.resources.limits.memory }}
+          requests:
+            cpu: {{ .Values.resources.requests.cpu }}
+            memory: {{ .Values.resources.requests.memory }}
