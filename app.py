@@ -15,7 +15,7 @@ BASE_URL = os.environ.get("BASE_URL", "http://localhost:8080")
 # Kubernetes will ping this to make sure the app is alive.
 @app.route("/health")
 def health():
-    return jsonify({"status": "ok!!!!!"})
+    return jsonify({"status": "ok"})
 
 # Core URL shortening logic; Handling URL shortening and redirection
 @app.route("/shorten", methods=["POST"])
