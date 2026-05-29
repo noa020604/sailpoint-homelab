@@ -1,13 +1,32 @@
+# Set to 1 due to the application's in-memory storage
+# Increasing this without a shared database would cause state drift and 404 errors
 replicaCount: 1
 
 image:
-  repository: url-shortener
-  tag: v1
-  pullPolicy: Never
+  # Points to GHCR, matching the GitHub Repository name
+  repository: ghcr.io/noa020604/sailpoint-homelab
+  # Default tag for local testing; The ci pipeline will override this dynamically with Git Commit SHAs
+  tag: latest
+  # Leverages local node image cache first, falling back to GHCR if not present
+  pullPolicy: IfNotPresent
 
 service:
+  # Exposes the service outside the cluster; provisions a cloud LoadBalancer in prod or requires 'minikube tunnel' locally
   type: LoadBalancer
+  # The external port where the service will accept incoming traffic
   port: 8080
 
 env:
+# Configurable base URL for generating shortened links without rebuilding the Docker image
   baseUrl: "http://localhost:8080"
+
+# Resource optimization 
+resources:
+  # Maximum allowed resources the pod can consume to avoid exhausting the node
+  limits:
+    cpu: 200m
+    memory: 256Mi
+  # Guaranteed resources reserved for the pod upon creation
+  requests:
+    cpu: 100m
+    memory: 128Mi

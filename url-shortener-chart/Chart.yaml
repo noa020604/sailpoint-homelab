@@ -2,5 +2,8 @@ apiVersion: v2
 name: url-shortener
 description: A Helm chart for SailPoint URL Shortener homelab
 type: application
+
+# 'version' tracks infrastructure/manifest changes 
+# 'appVersion' tracks the application code release
 version: 0.1.0
 appVersion: "1.0.0"
