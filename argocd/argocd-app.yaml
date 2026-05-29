@@ -2,7 +2,7 @@ apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
   # Name of the application inside ArgoCD
-  name: url-shortner
+  name: url-shortener
   namespace: argocd
 spec:
   # Logical project grouping inside ArgoCD
@@ -13,12 +13,12 @@ spec:
     # Git branch to watch for changes
     targetRevision: main
     # Path to the Helm chart folder in the repo
-    path: url-shortner-chart
+    path: url-shortener-chart
   destination:
     # Deploys to the local Kubernetes cluster
     server: 'https://kubernetes.default.svc'
     # Target namespace for the application workloads
-    namespace: url-shortner
+    namespace: url-shortener
   syncPolicy:
     automated:
       # Automatically apply changes from Git to the cluster
