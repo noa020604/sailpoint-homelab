@@ -7,8 +7,8 @@ image:
   repository: ghcr.io/noa020604/sailpoint-homelab
   # Default tag for local testing; The ci pipeline will override this dynamically with Git Commit SHAs
   tag: latest
-  # Leverages local node image cache first, falling back to GHCR if not present
-  pullPolicy: IfNotPresent
+  # Always pull the image to ensure the latest version is deployed in development/testing
+  pullPolicy: Always
 
 service:
   # Exposes the service outside the cluster; provisions a cloud LoadBalancer in prod or requires 'minikube tunnel' locally
