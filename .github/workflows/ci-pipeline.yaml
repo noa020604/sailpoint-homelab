@@ -1,3 +1,4 @@
+
 name: CI Pipeline - Build and Push
 
 # Trigger only when code is pushed to the main branch
@@ -9,9 +10,11 @@ jobs:
   build:
     # Specifies the OS for the virtual runner that executes the pipeline steps
     runs-on: ubuntu-latest
+    # Prevent infinite loops by skipping the workflow if it was triggered by an automated tag update commit
+    if: "!contains(github.event.head_commit.message, 'chore: update image tag')"
     permissions:
-      # Required to clone and read the repository code
-      contents: read
+      # Required to clone and read the repository code AND push automated changes back
+      contents: write
       # Required to upload/publish the image to GitHub Packages (GHCR)
       packages: write
 
@@ -51,3 +54,18 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           # Attaches Git metadata labels to the image
           labels: ${{ steps.meta.outputs.labels }}
+
+      - name: Update Helm values
+        # Update the image tag in values.yaml to match the current Git commit SHA for traceability
+        # Make sure the path 'url-shortner-chart/values.yaml' matches your repository structure
+        run: |
+          sed -i "s|tag:.*|tag: ${{ github.sha }}|g" url-shortner-chart/values.yaml
+          
+          # Configure Git user for the automated commit
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          
+          # Stage, commit, and push the updated values file back to the repository
+          git add url-shortner-chart/values.yaml
+          git commit -m "chore: update image tag to ${{ github.sha }}"
+          git push
