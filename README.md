@@ -1,6 +1,23 @@
-# Linker — URL Shortener Service
+# URL Shortener Service (SailPoint DevOps Homelab)
 
-A cloud-native URL shortener built with Flask, containerized with Docker, deployed to Kubernetes via Helm, and managed through GitOps with Argo CD.
+A minimal URL shortener service demonstrating a full GitOps pipeline: 
+a containerized Flask app, a Helm chart for Kubernetes deployment, 
+a GitHub Actions CI pipeline that builds and pushes images to GHCR, and an ArgoCD 
+
+---
+## Architecture
+
+```
+Push to main ──> GitHub Actions ──> Build & push image to GHCR
+                                          │
+                                          ▼
+   Git repo (Helm chart) <── watches ── ArgoCD ──> Kubernetes (minikube)
+                                                        │
+                                                        ▼
+                                                 Flask app (Deployment + Service)
+```
+
+The flow: code is pushed to `main`, CI builds a Docker image and publishes it to GitHub Container Registry, and ArgoCD syncs the Helm chart from Git into the cluster.
 
 ---
 
@@ -23,36 +40,72 @@ sailpoint-homelab/
 ├── Dockerfile
 └── requirements.txt
 ```
+## Repository Layout
 
----
+| Path | Purpose |
+|------|---------|
+| `app.py` | Flask URL shortener (in-memory store, MD5-based slugs) |
+| `requirements.txt` | Python dependencies (Flask, Gunicorn) |
+| `Dockerfile` | Builds the app image; runs as non-root via Gunicorn on port 8080 |
+| `url-shortner-chart/` | Helm chart (Deployment + Service templates, `values.yaml`) |
+| `argocd/argocd-app.yaml` | ArgoCD `Application` manifest for GitOps sync |
+| `.github/workflows/ci-pipeline.yaml` | CI: build and push image to GHCR on push to `main` |
+
+## The Application
+
+A small Flask service that stores URL mappings in memory.
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/health` | GET | Health check used by Kubernetes liveness/readiness probes |
+| `/shorten` | POST | Body `{"url": "..."}` → returns `{"short_url": "..."}` (201) |
+| `/<slug>` | GET | 302 redirect to the original URL, or 404 if unknown |
+| `/stats` | GET | Returns the total number of stored links |
+
+The base URL used in shortened links is read from the `BASE_URL` environment variable (injected by the Helm chart from `values.yaml`).
+
+> **Note:** Storage is in-memory, so `replicaCount` is intentionally locked to `1`. Scaling beyond one replica without a shared datastore would cause inconsistent results (a slug created on one pod won't resolve on another).
+
 
 ## Run Locally with Docker
 
 **1. Build the image:**
 ```bash
-docker build -t linker:local .
+docker build -t url-shortener:latest .  
 ```
 
 **2. Run the container:**
 ```bash
-docker run -p 8080:8080 -e BASE_URL=http://localhost:8080 linker:local
+docker run -d -p 8080:8080 url-shortener:latest
 ```
 
 **3. Test the endpoints:**
 ```bash
 # Health check
+# Linux/macOS
 curl http://localhost:8080/health
+# Windows (PowerShell)
+curl.exe http://localhost:8080/health
 
 # Shorten a URL
+# Linux/macOS
 curl -X POST http://localhost:8080/shorten \
   -H "Content-Type: application/json" \
   -d '{"url": "https://www.google.com"}'
+# Windows (PowerShell)
+curl.exe -i -X POST http://localhost:8080/shorten -H "Content-Type: application/json" -d '{\"url\": \"https://www.google.com\"}'
 
 # Follow the short URL (replace <slug> with the value returned above)
-curl -L http://localhost:8080/<slug>
+# Linux/macOS
+curl -i http://localhost:8080/<your-slug>
+# Windows (PowerShell)
+curl.exe -i http://localhost:8080/<your-slug>
 
 # Stats
+# Linux/macOS
 curl http://localhost:8080/stats
+# Windows (PowerShell)
+curl.exe http://localhost:8080/stats
 ```
 
 ---
