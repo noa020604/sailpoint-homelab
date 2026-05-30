@@ -152,12 +152,14 @@ helm install url-shortener ./url-shortener-chart --set env.baseUrl=http://<EXTER
 
 **minikube:**
 ```bash
+# Open a new terminal window
 minikube tunnel
 # The service will be available at http://localhost:8080
 ```
 
 **kind** (use port-forward):
 ```bash
+# Open a new terminal window
 kubectl port-forward svc/url-shortener-service 8080:8080
 ```
 
@@ -173,6 +175,7 @@ kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/st
 
 ### 2. Access the Argo CD UI
 ```bash
+# Open a new terminal window
 kubectl port-forward svc/argocd-server -n argocd 8081:443
 ```
 Open https://localhost:8081 in your browser.
@@ -212,10 +215,12 @@ Now that the infrastructure is confirmed to be running, verify that the applicat
 
 ## CI/CD Flow
 
-Every push to `main` triggers the GitHub Actions pipeline which:
-1. Builds the Docker image
-2. Pushes it to GHCR with two tags: `latest` and the full Git commit SHA
-3. Argo CD detects the updated manifests and syncs the cluster automatically
+The project follows a GitOps methodology, separating the artifact build process from the cluster deployment:
+
+
+1. **Continuous Integration (CI):** Every `push` to the `main` branch triggers the GitHub Actions pipeline. It builds the Docker image and pushes it to GHCR with two tags: `latest` and the unique `commit SHA`.
+2. **GitOps Synchronization:** The deployment is managed by Argo CD, which continuously monitors the Helm chart configurations in this repository.
+3. **Rollout Mechanism:**To update the app, just update the image.tag in your values.yaml to the latest commit SHA and push the change to Git. Argo CD will immediately spot the difference, sync the cluster, and handle the Rolling Update for you automatically.
 
 The SHA tag enables full traceability — you can always identify exactly which commit is running in the cluster.
 
@@ -227,4 +232,6 @@ The SHA tag enables full traceability — you can always identify exactly which 
 
 **`BASE_URL` as an environment variable:** The base URL is injected at runtime via `values.yaml` and never baked into the image. For local testing, `http://localhost:8080` works with `minikube tunnel` or `port-forward`. For a real deployment, update `env.baseUrl` in `values.yaml` to match the external IP or domain.
 
-**LoadBalancer service type:** Works out of the box with `minikube tunnel`. For kind, use `kubectl port-forward` instead, or switch `service.type` to `NodePort` in `values.yaml`.
+**Service Exposure:** The service is currently set to `LoadBalancer` for ease of local testing with `minikube tunnel`. In a production environment, this would be changed to `ClusterIP` and exposed via an `Ingress` controller to handle routing, SSL termination, and host-based pathing.
+
+**Image Tagging & Rolling Updates**: For this lab, I am using the `latest tag` combined with `imagePullPolicy: Always` to allow for rapid testing. While this triggers a pull of the newest image upon `pod restart`, it creates a **configuration drift** where the cluster state deviates from Git. In a production-grade `GitOps workflow`, I would use **immutable tags** (like the commit SHA) and update the `values.yaml` in Git for every deployment. This ensures that the `Git repository` remains the **Single Source of Truth** and enables safe, controlled **Rolling Updates** managed by `Argo CD`.
