@@ -220,7 +220,7 @@ The project follows a GitOps methodology, separating the artifact build process 
 
 1. **Continuous Integration (CI):** Every `push` to the `main` branch triggers the GitHub Actions pipeline. It builds the Docker image and pushes it to GHCR with two tags: `latest` and the unique `commit SHA`.
 2. **GitOps Synchronization:** The deployment is managed by Argo CD, which continuously monitors the Helm chart configurations in this repository.
-3. **Rollout Mechanism:**To update the app, just update the image.tag in your values.yaml to the latest commit SHA and push the change to Git. Argo CD will immediately spot the difference, sync the cluster, and handle the Rolling Update for you automatically.
+3. **Rollout Mechanism:** To update the app, just update the image.tag in your values.yaml to the latest commit SHA and push the change to Git. Argo CD will immediately spot the difference, sync the cluster, and handle the Rolling Update for you automatically.
 
 The SHA tag enables full traceability — you can always identify exactly which commit is running in the cluster.
 
