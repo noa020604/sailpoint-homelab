@@ -205,7 +205,9 @@ kubectl get svc -n url-shortener
 kubectl get application url-shortener -n argocd
 ```
 ### Functional Verification
+
 Now that the infrastructure is confirmed to be running, verify that the application logic works correctly within the cluster. You can run the same functional tests described in the Run Locally with Docker section to ensure your endpoints (Health, Shorten, Redirect, Stats) are behaving as expected.
+
 ---
 
 ## CI/CD Flow
