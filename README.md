@@ -47,7 +47,7 @@ sailpoint-homelab/
 | `app.py` | Flask URL shortener (in-memory store, MD5-based slugs) |
 | `requirements.txt` | Python dependencies (Flask, Gunicorn) |
 | `Dockerfile` | Builds the app image; runs as non-root via Gunicorn on port 8080 |
-| `url-shortner-chart/` | Helm chart (Deployment + Service templates, `values.yaml`) |
+| `url-shortener-chart/` | Helm chart (Deployment + Service templates, `values.yaml`) |
 | `argocd/argocd-app.yaml` | ArgoCD `Application` manifest for GitOps sync |
 | `.github/workflows/ci-pipeline.yaml` | CI: build and push image to GHCR on push to `main` |
 
@@ -119,14 +119,14 @@ curl.exe http://localhost:8080/stats
 
 ### 1. Start a local cluster
 
-**kind:**
-```bash
-kind create cluster --name linker
-```
-
 **minikube:**
 ```bash
 minikube start
+```
+
+**kind:**
+```bash
+kind create cluster --name url-shortener
 ```
 
 ### 2. Make the GHCR image public
