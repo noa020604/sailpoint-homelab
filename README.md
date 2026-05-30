@@ -188,6 +188,7 @@ Login with username `admin` and the password above.
 ```bash
 kubectl apply -f argocd/argocd-app.yaml
 ```
+> **Note:** The argocd-app.yaml manifest is configured to automatically create the required namespace upon synchronization. If you prefer manual control, ensure the url-shortener namespace exists before applying.
 
 Argo CD will now watch the `main` branch of this repository and automatically sync any changes to the cluster.
 
@@ -196,27 +197,15 @@ Argo CD will now watch the `main` branch of this repository and automatically sy
 ## Verify Everything End-to-End
 
 ```bash
-# 1. Check pods are running
+# Check that pods and services are running
 kubectl get pods -n url-shortener
-
-# 2. Check the service
 kubectl get svc -n url-shortener
 
-# 3. Shorten a URL
-curl -X POST http://localhost:8080/shorten \
-  -H "Content-Type: application/json" \
-  -d '{"url": "https://www.github.com"}'
-
-# 4. Follow the redirect (replace <slug>)
-curl -L http://localhost:8080/<slug>
-
-# 5. Check stats
-curl http://localhost:8080/stats
-
-# 6. Verify Argo CD sync status
+# Verify Argo CD sync status
 kubectl get application url-shortener -n argocd
 ```
-
+### Functional Verification
+Now that the infrastructure is confirmed to be running, verify that the application logic works correctly within the cluster. You can run the same functional tests described in the Run Locally with Docker section to ensure your endpoints (Health, Shorten, Redirect, Stats) are behaving as expected.
 ---
 
 ## CI/CD Flow
